@@ -835,10 +835,9 @@ Makes Across Different Ages and Passenger Numbers*
 
 The analysis showed that Ford SUVs manufactured between 1995 and 1999
 consistently had a higher probability of being involved in tire-related
-accidents than other car makes (Figure 6). In the Figure 6, the blue
-line represents Ford vehicles, while the red like shows other makes. The
-graph suggests that the probability of tire-related accidents increased
-with both vehicle age and the number of passengers in the car.
+accidents than other car makes (Figure 6). In the Figure 6, the graph
+suggests that the probability of tire-related accidents increased with
+both vehicle age and the number of passengers in the car.
 
 The analysis led to the development of a logistic regression model that
 estimates the odds or probability of tire-related accidents for Ford
