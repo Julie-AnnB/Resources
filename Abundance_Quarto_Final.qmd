@@ -1,0 +1,356 @@
+---
+format: gfm
+---
+
+<br>
+
+::: {style="text-align: center;"}
+<h2>Evaluation of the Effects of Forest Patch Characteristics<br>on Bird Abundance</h2>
+:::
+
+<br>
+
+### Aim
+
+The aim of this study was to examine how forest fragmentation due to land development affects bird abundance. Eight forest patch characteristics were evaluated and added to a model to identify the main determinants of forest bird abundance.
+
+<br>
+
+### Background
+
+The dataset comprised observations from 56 independent forest patches. Further information on variables is provided in the Statistical Methods and Results section.
+
+<br>
+
+### Statistical Methods and Results
+
+### Variables
+
+1. `Abundance` (abundance): the response variable measuring the average number of forest birds observed in a patch (counts from independent 20-minute sessions).
+
+2. `Patch area` (patch.area): signifies size of the patch, measured in hectares (ha).
+
+3. `Year of isolation` (year.of.isolation): year the patch became isolated.
+
+4. `Distance to the nearest patch` (dist.nearest): distance to the next closest patch (km).
+
+5. `Distance to larger patch` (dist.larger): distance to the nearest larger patch (km).
+
+6. `Altitude` (altitude): represents patch elevation.
+
+7. `Grazing intensity` (grazing.intensity): is the study categorical variable suggesting how much the patch was grazed by livestock with five factor levels: light, less than average, average, moderately heavy, heavy.
+
+8. `Years of isolation` (yrs.isolation): number of years a patch has been fragmented.
+
+
+<br>
+
+### Methods and Results
+
+Firstly, grazing levels were arranged from light to heavy. Data analysis commenced with boxplot that provided insight into the relationship between abundance and grazing.intensity (Figure C). A scatterplot matrix was created to visualise the pairwise relationships between abundance and predictor variables, followed by a correlation analysis between yrs.isolation and year.of.isolation (Figures A & B). After this analysis the preliminary model (Model 1) was proposed (Figure C-C). Residual plots were examined to ensure that assumptions of linear regression were met (Figure K), and potential outliers in Model 1 were assessed (Figure L). Model 2 was selected using a manual backward stepwise method (Figure), and then evaluated for its suitability as a linear model for collected data (Figure). Lastly, a polynomial transformation was added to the model and assessed, it was found not to be an appropriate fit.
+
+```{r}
+#| message: false
+#| warning: false
+
+# Import data
+d <- read.csv("forest.birds.csv", header = TRUE, stringsAsFactors = TRUE)
+
+birds <- d
+
+# Set grazing intensity factor levels from light to heavy
+birds$grazing.intensity <- factor(
+  birds$grazing.intensity,
+  levels = c("light", "less than average", "average", "moderately heavy", "heavy")
+)
+
+birds$grazing.intensity <- relevel(birds$grazing.intensity, ref = "light")
+
+# Check
+levels(birds$grazing.intensity)
+```
+
+```{r}
+str(birds)
+head(birds)
+summary(birds)
+```
+<br>
+
+### Descriptive Statistics and Data Visualisation
+
+```{r}
+# Boxplot
+boxplot(abundance ~ grazing.intensity, data = birds,
+        main = "bird numbers vs grazing parctices",
+        xlab = "")
+```
+
+**Figure C** *Bird Numbers vs Grazing Practices*
+
+```{r}
+#| fig-width: 18
+#| fig-height: 16
+#| out-width: 80%
+
+pairs(birds[, c("abundance","patch.area","year.of.isolation",
+                "dist.nearest","dist.larger","altitude","yrs.isolation")],
+  panel = panel.smooth
+)
+```
+
+**Figure A** *Scatterplot Matrix of Abundance and Predictor Variables*
+
+```{r}
+#| echo: false
+# Checking co-linearity between yrs.isolation & year.of.isolation
+plot(year.of.isolation ~ yrs.isolation, data = birds,
+     xlab = "years of isolation",
+     ylab = "year of isolation")
+```
+
+**Figure B** *Relationship Between yrs.isolation and year.of.isolation*
+
+A correlation test (*r* = -1, *p* \< .001) confirmed that yrs.isolation and year.of.isolation were highly corelated. To avoid multicollinearity, year.of.isolation was excluded from the model, while yrs.isolation was kept due to its interpretability. Prompted by the pairwise scatterplot A, four log transformations were applied to patch.area, dist.nearest, dist.larger, yrs.isolation, and the transformed predictors were added to the preliminary linear model. Also, interaction terms were added to evaluate the effect of altitude on abundance across different grazing levels (altitude:grazing.intensity), and whether the effects of patch.size on abundance differed across grazing intensities (log(patch.area):grazing.intensity). As a result, the preliminary model was:
+
+Model 1: abundance \~ log(patch.area) + log(dist.nearest) + log(dist.larger) + altitude + grazing.intensity + log(yrs.isolation) + log(patch.area):grazing.intensity + altitude:grazing.intensity
+
+```{r}
+# Fit preliminary model (Model 1)
+prelim <- lm(abundance ~ log(patch.area) + log(dist.nearest) + log(dist.larger) +
+               altitude + grazing.intensity + log(yrs.isolation) +
+               log(patch.area):grazing.intensity + altitude:grazing.intensity,
+             data = birds)
+# summary(prelim), run if call needed 
+```
+
+To evaluate the regression line of the new model, an inspection of the diagnostic plot of residuals for Model 1 was preformed (Figure K).
+
+```{r}
+opar <- par(mfrow = c(2, 2))
+plot(prelim)
+par(opar)
+```
+
+**Figure K** *Diagnostic Residual Plots for Model 1*
+
+Further checks were done on cases 14, 17, and 47. Case 17 showed high DFBETA values for the intercept and several predictors, indicating a high influence on coefficient if removed. Case 14 also showed similar values while case 47 did not return any noteworthy results. Both cased 14 and 17 demonstrated high DIFFTS values in comparison to all other cases, which suggested their strong effect on fitted values if removed. Residual plots inspection and coefficients of Model 1 without cases 14 and 17.
+
+```{r}
+# Check influence measures
+#summary(influence.measures(prelim)), print if needed
+```
+
+```{r}
+birds[c(14, 17, 47), ]
+```
+
+```{r}
+fit0_no17 <- lm(abundance ~ log(patch.area) + log(dist.nearest) + log(dist.larger) +
+                  grazing.intensity + altitude + yrs.isolation +
+                  patch.area:grazing.intensity + altitude:grazing.intensity,
+                data = birds[-c(17), ])
+#summary(fit0_no17)
+opar <- par(mfrow = c(2, 2))
+plot(fit0_no17)
+par(opar)
+```
+
+```{r}
+fit0_no14 <- lm(abundance ~ log(patch.area) + log(dist.nearest) + log(dist.larger) +
+                  grazing.intensity + altitude + yrs.isolation +
+                  patch.area:grazing.intensity + altitude:grazing.intensity,
+                data = birds[-c(14), ])
+#summary(fit0_no14)
+opar <- par(mfrow = c(2, 2))
+plot(fit0_no14)
+par(opar)
+```
+
+```{r}
+fit0_no_14.17 <- lm(abundance ~ log(patch.area) + log(dist.nearest) + log(dist.larger) +
+                      grazing.intensity + altitude + yrs.isolation +
+                      patch.area:grazing.intensity + altitude:grazing.intensity,
+                    data = birds[-c(14, 17), ])
+#summary(fit0_no_14.17)
+opar <- par(mfrow = c(2, 2))
+plot(fit0_no_14.17)
+par(opar)
+```
+
+**Figure L** *Residual Plots for Model 1 Sensitivity Analyses*
+
+**Table 1** *Summary of Adjusted R^2^ and Signifincat Coefficinets With and Without Cases 14 and 17*
+
+| | *All cases included* | *no 17* | *no 14* | *no 14 and 17* |
+|---|---|---|---|---|
+| Adjusted R^2^ | 69% | 77% | 72% | 79% |
+| log(patch.area)^a^ | ns | 2.93\*\* | ns | 2.04\* |
+| average | -22.06\* | -23.75\* | ns | -20.89\* |
+| heavy | -20.32\* | ns | ns | ns |
+| average:altitude^a^ | ns | 0.15\* | ns | ns |
+| grazing.average:patch.area^a^ | ns | ns | ns | -0.26\* |
+| log(patch.area):moderately heavy^a^ | 6.7\* | ns | ns | ns |
+| moderately heavy:patch.area^a^ | ns | ns | 0.92\* | 0.89\* |
+
+Note. \* *p* \< .05, \*\* *p* \< .01, \*\*\* *p* \< .001., ns = not significant at α = .05., ^a^ Coefficients that were statisrically significant based on the preliminary model and its case combinations.
+
+The analysis in Table 1 demonstrated that removal of the two cases increased the explained variation by 10% compared to the all-inclusive model. Also, it showed an increase in number of significant coefficients. While the residual plot (Figure Z) shows improvement in the constant variance, linearity worsened and three new outliers appeared. Given that removing case 14 and 17 did not resolve the initial concerns it was decided to keep all data points. As a result, Model 1 was accepted and stepwise approach was used until all statistically significant predictors were selected.
+
+```{r}
+d1 <- lm(abundance ~ log(patch.area) + log(dist.nearest) + log(dist.larger) +
+           altitude + grazing.intensity + log(yrs.isolation) +
+           log(patch.area):grazing.intensity + altitude:grazing.intensity,
+         data = birds)
+drop1(d1, .~., test = "F")
+```
+
+```{r}
+d2 <- lm(abundance ~ log(patch.area) + log(dist.nearest) + altitude +
+           grazing.intensity + log(yrs.isolation) +
+           log(patch.area):grazing.intensity + altitude:grazing.intensity,
+         data = birds)
+drop1(d2, .~., test = "F")
+```
+
+```{r}
+d3 <- lm(abundance ~ log(patch.area) + altitude + grazing.intensity +
+           log(yrs.isolation) + log(patch.area):grazing.intensity +
+           altitude:grazing.intensity,
+         data = birds)
+drop1(d3, .~., test = "F")
+```
+
+```{r}
+d4 <- lm(abundance ~ log(patch.area) + altitude + grazing.intensity +
+           log(patch.area):grazing.intensity + altitude:grazing.intensity,
+         data = birds)
+drop1(d4, .~., test = "F")
+```
+
+```{r}
+d5 <- lm(abundance ~ log(patch.area) + grazing.intensity +
+           log(patch.area):grazing.intensity + altitude:grazing.intensity,
+         data = birds)
+drop1(d5, .~., test = "F")
+```
+
+```{r}
+d6 <- lm(abundance ~ log(patch.area) + grazing.intensity +
+           log(patch.area):grazing.intensity,
+         data = birds)
+drop1(d6, .~., test = "F")
+```
+
+```{r}
+d7 <- lm(abundance ~ log(patch.area) + grazing.intensity, data = birds)
+drop1(d7, .~., test = "F")
+```
+
+```{r}
+fit_final <- lm(abundance ~ log(patch.area) + grazing.intensity, data = birds)
+summary(fit_final)
+```
+
+```{r}
+opar <- par(mfrow = c(2, 2))
+plot(fit_final)
+par(opar)
+```
+
+On inspection, Model 3 (labelled Model 2 below) which included a quadratic term did not significantly (p = 0.73) contribute to explaining bird abundance in segmented patches of forest as demonstrated below:
+
+```{r}
+poly <- lm(abundance ~ log(patch.area) + I(log(patch.area)^2) + grazing.intensity,
+           data = birds)
+
+opar <- par(mfrow = c(2, 2))
+plot(poly)
+par(opar)
+
+summary(poly)
+```
+
+```{r}
+anova(fit_final, poly)
+AIC(fit_final, poly)
+```
+
+It seemed that the quadratic term improved the capacity to explain the relationship between variables (Figure HH). However, the quadratic term coefficient in the updated model (Model 3) was not significant. Therefore, to keep the model simple and based on the observations above, the quadratic term was excluded. The final model, and thus, determinants of bird abundance were log(patch.area) and grazing.intensity:
+
+::: {style="text-align: center;"}
+<h3>Final Model (Model 2): abundance \~ log(patch.area) + grazing.intensity</h3>
+:::
+
+<br>
+
+### Data Visualisation (Power Relationship and Parallel Regression Lines)
+
+```{r}
+# Abundance vs patch area (ha) with CI and PI
+fit_short <- lm(abundance ~ log(patch.area), data = birds)
+
+plot(abundance ~ patch.area, data = birds,
+     xlab = "patch area (ha)", ylab = "Abundance",
+     pch = 16, xlim = c(0, 100))
+
+xmin <- max(min(birds$patch.area, na.rm = TRUE), 1e-6)
+newx <- seq(xmin, 200, length.out = 400)
+
+pr.conf <- predict(fit_short, newdata = data.frame(patch.area = newx), interval = "confidence")
+matlines(newx, pr.conf, col = c("black", "red", "red"), lty = c(1))
+
+pr.pred <- predict(fit_short, newdata = data.frame(patch.area = newx), interval = "prediction")
+matlines(newx, pr.pred, col = c("black", "red", "red"), lty = c(2))
+```
+
+**Figure 1** *Relationship Between Bird Abundance and Patch Area (ha)*
+
+```{r}
+# Parallel lines: light vs heavy grazing
+with(birds, {
+  plot(log(patch.area), abundance,
+       pch = 16, col = "gray",
+       xlab = "log(patch.area)", ylab = "Abundance",
+       xlim = c(0, max(log(patch.area), na.rm = TRUE)))
+
+  points(log(patch.area)[grazing.intensity == "light"],
+         abundance[grazing.intensity == "light"],
+         pch = 16, col = "red")
+
+  points(log(patch.area)[grazing.intensity == "heavy"],
+         abundance[grazing.intensity == "heavy"],
+         pch = 16, col = "black")
+})
+
+abline(a = coef(fit_final)[1],
+       b = coef(fit_final)[2], col = "red")
+abline(a = coef(fit_final)[1] + coef(fit_final)[6],
+       b = coef(fit_final)[2], col = "black")
+
+legend("topleft",
+       legend = c("Light grazing", "Heavy grazing"),
+       col = c("red", "black"),
+       pch = 16, lty = 1, lwd = 2,
+       bty = "n")
+```
+
+**Figure 2** *Parallel Regression Lines for Light and Heavy Grazing Intensity Across Log(Patch Area)*
+
+<br>
+
+### Findings
+
+1. The analysis showed that the relationship between patch size and bird abundance was positive: larger patches held larger bird numbers.
+
+2. The relationship between light and heavy grazing practices can be explained by a parallel linear relationship.
+
+<br>
+
+### Discussion
+
+The final model (Table GG) suggested that patch.area and grazing.intensity explained 70% of the variance in bird abundance. Specifically, if a patch size were to double, there would be an increase of about 2.2 birds (calculated as b X ln(2)). Model 2 also implied that, in this dataset, patches with heavy grazing practices contained an average of 3.8 birds while lightly grazed patches contained about 15.5 birds, holding patch size constant (E[Abundance | log(patch.area), light grazing] = 15.72 + 3.15log(patch.area); E[Abundance | log(patch.area), heavy grazing] = 3.82 + 3.15log(patch.area)).
+
+Residual plots suggested slight non-linearity (Table pp), thus, using Model 2 to predict bird abundance should be interpreted with caution. Considering the linearity concerns, future studies could apply statistical techniques that are more robust to large variability and skewed distributions. It might be important investigate why only light and heavy grazing intensities were significantly different, as this may signal that unidentified predictors mediate the relationship between grazing intensities and bird abundance (supports by the unexplained leftover 30% variance). Lastly, the results may have practical implications land developers: increase patch sizes and reduce grazing practices to boost bird numbers (Figure 1-2).
+
+<br> <br>
