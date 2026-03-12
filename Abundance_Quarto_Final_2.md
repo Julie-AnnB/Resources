@@ -1,7 +1,5 @@
 <br>
-<div style="text-align: center;">
-<h2>Evaluation of the Effects of Forest Patch Characteristics<br>on Bird Abundance</h2>
-</div>
+<h2 align="center">Evaluation of the Effects of Forest Patch Characteristics on Bird Abundance</h2>
 <br>
 
 ### Aim
