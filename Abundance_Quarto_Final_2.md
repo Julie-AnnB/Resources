@@ -1,17 +1,7 @@
-
-
 <br>
-
 <div style="text-align: center;">
-
-<h2>
-
-Evaluation of the Effects of Forest Patch Characteristics<br>on Bird
-Abundance
-</h2>
-
+<h2>Evaluation of the Effects of Forest Patch Characteristics<br>on Bird Abundance</h2>
 </div>
-
 <br>
 
 ### Aim
@@ -700,9 +690,10 @@ grazing.intensity:
 <div style="text-align: center;">
 
 <h3>
-
+::: {style="text-align: center;"}
 Final Model (Model 2): abundance ~ log(patch.area) + grazing.intensity
 </h3>
+:::
 
 </div>
 
