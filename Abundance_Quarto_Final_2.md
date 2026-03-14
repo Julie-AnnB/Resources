@@ -1,4 +1,3 @@
-<br>
 <h2 align="center">Evaluation of the Effects of Forest Patch Characteristics on Bird Abundance</h2>
 <br>
 
