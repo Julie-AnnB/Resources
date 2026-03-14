@@ -1,5 +1,3 @@
-<br>
-
 <h2 align="center">Assessing the Influence of Vehicle Age and Passenger Number on the Odds of Tire-Related Fatal Accidents in 1995-1999 Ford and Other Sport Utility Vehicle (SUV) Models</h2>
 
 <br>
